@@ -124,6 +124,7 @@ button{font:inherit;color:inherit;cursor:pointer}
       <div class="best" id="bestLine"></div>
       <button class="secondary" id="lbBtn" style="width:100%;margin-top:10px">🏆 Рейтинг (топ-10)</button>
     </div>
+  <div class="card" id="menuLb" style="margin-top:14px"></div>
   </section>
 
   <!-- ГРА -->
@@ -830,7 +831,17 @@ function updateAtlasNote() {
   $("#startBtn").disabled = needs && atlasState !== "ok";
 }
 
+// High-score table shown directly on the start screen (for the selected mode + difficulty)
+function renderMenuLb() {
+  const list = lbGet(settings.mode, settings.diff);
+  $("#menuLb").innerHTML = `<h2 style="margin:0 0 4px;color:var(--text)">🏆 Топ-10 · ${MODE_NAMES[settings.mode]} · ${DIFF[settings.diff].name}</h2>` +
+    (list.length
+      ? `<ol class="lbl">${list.map((e, i) => `<li><span class="rk">${i + 1}</span><span class="nm">${esc(e.name)}</span><span class="tp">${TYPE_ICON[e.type] || ""} ${e.acc}%</span><b>${e.score}</b></li>`).join("")}</ol>`
+      : `<div class="best" style="margin-top:10px">Поки що порожньо. Зіграйте першими!</div>`);
+}
+
 function renderMenu() {
+  renderMenuLb();
   const mark = (id, val) => document.querySelectorAll(`#${id} button`).forEach(b => b.classList.toggle("sel", b.dataset.v === String(val)));
   mark("modeBtns", settings.mode); mark("diffBtns", settings.diff);
   mark("typeBtns", settings.type); mark("totalBtns", settings.total);
