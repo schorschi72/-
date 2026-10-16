@@ -73,6 +73,12 @@ button{font:inherit;color:inherit;cursor:pointer}
 .mlist{list-style:none;padding:0;margin:8px 0}
 .mlist li{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}
 .mlist img{width:36px;border-radius:3px;border:1px solid var(--line)}
+.lbl{list-style:none;padding:0;margin:12px 0 0;counter-reset:n}
+.lbl li{display:flex;align-items:center;gap:10px;padding:9px 6px;border-bottom:1px solid var(--line)}
+.lbl .rk{width:28px;text-align:center;font-weight:800;color:var(--muted)}
+.lbl li:nth-child(1) .rk{color:#d4a017}.lbl li:nth-child(2) .rk{color:#9aa4b2}.lbl li:nth-child(3) .rk{color:#b87333}
+.lbl .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.lbl .tp{color:var(--muted);font-size:.85rem}
 @media(max-width:480px){.modes{grid-template-columns:1fr}.opts{grid-template-columns:1fr}.stim .emoji{font-size:5rem}}
 </style>
 </head>
@@ -116,6 +122,7 @@ button{font:inherit;color:inherit;cursor:pointer}
       <div class="note hidden" id="atlasNote"></div>
       <button class="primary" id="startBtn">Грати</button>
       <div class="best" id="bestLine"></div>
+      <button class="secondary" id="lbBtn" style="width:100%;margin-top:10px">🏆 Рейтинг (топ-10)</button>
     </div>
   </section>
 
@@ -140,6 +147,17 @@ button{font:inherit;color:inherit;cursor:pointer}
   </section>
 
   <!-- РЕЗУЛЬТАТ -->
+  <section id="lb" class="hidden">
+    <div class="card">
+      <h2 style="margin-top:0;color:var(--text)">🏆 Рейтинг — топ-10</h2>
+      <div class="seg" id="lbModes"></div>
+      <div class="seg" id="lbDiffs" style="margin-top:8px"></div>
+      <div id="lbTable"></div>
+      <div class="best">Рейтинг зберігається на цьому пристрої.</div>
+      <div class="row"><button class="secondary" id="lbBack">← Меню</button></div>
+    </div>
+  </section>
+
   <section id="result" class="hidden">
     <div class="card">
       <h2 style="margin-top:0;color:var(--text)" id="rTitle">Гру завершено</h2>
@@ -150,6 +168,7 @@ button{font:inherit;color:inherit;cursor:pointer}
         <div><b id="rStreak">0</b>найкраща серія</div>
       </div>
       <div id="rRecord" class="best"></div>
+      <div id="rEntry"></div>
       <div id="rMistakes"></div>
       <div class="row">
         <button class="secondary hidden" id="reviewBtn">🔁 Повторити помилки</button>
@@ -728,6 +747,7 @@ function finish(reason) {
     else rec = `Рекорд: ${prev}`;
   }
   $("#rRecord").textContent = rec;
+  offerEntry(G, acc);
 
   const uniq = [...new Set(G.mistakes)];
   $("#rMistakes").innerHTML = uniq.length
@@ -745,9 +765,56 @@ function finish(reason) {
 /* =====================================================================
    7. МЕНЮ ТА ІНТЕРФЕЙС
    ===================================================================== */
+/* ---------- Leaderboard (Top 10 per mode + difficulty, stored in localStorage) ---------- */
+const LB_SIZE = 10;
+const TYPE_ICON = { time: "⏱", lives: "❤️" };
+const lbKey = (m, d) => `cq_lb_${m}_${d}`;
+const lbGet = (m, d) => store.get(lbKey(m, d), []);
+const esc = t => String(t).replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[ch]));
+const lbSel = { mode: settings.mode, diff: settings.diff };
+
+function offerEntry(g, acc) {
+  const box = $("#rEntry"); box.innerHTML = "";
+  if (g.type === "free" || g.review || g.score <= 0) return;
+  const list = lbGet(g.mode, g.diff);
+  if (list.length >= LB_SIZE && g.score <= list[list.length - 1].score) return;
+  const rank = list.filter(e => e.score >= g.score).length + 1;
+  box.innerHTML = `<div class="fb ok"><b>🏆 Місце ${rank}!</b>
+    <div class="typed" style="margin-top:8px"><input id="lbName" maxlength="16" placeholder="Ваше ім'я" autocomplete="off"><button class="go" id="lbSave">Зберегти</button></div></div>`;
+  const inp = $("#lbName");
+  inp.value = store.get("cq_name", "");
+  const save = () => {
+    const name = inp.value.trim().slice(0, 16) || "???";
+    store.set("cq_name", name);
+    const l = lbGet(g.mode, g.diff);
+    l.push({ name, score: g.score, type: g.type, acc, date: Date.now() });
+    l.sort((a, b) => b.score - a.score || a.date - b.date);
+    store.set(lbKey(g.mode, g.diff), l.slice(0, LB_SIZE));
+    box.innerHTML = `<div class="best">✅ Результат збережено</div>`;
+  };
+  $("#lbSave").onclick = save;
+  inp.onkeydown = e => { if (e.key === "Enter") save(); };
+}
+
+function renderLb() {
+  const mk = (id, items, key) => {
+    $("#" + id).innerHTML = items.map(([v, n]) => `<button data-v="${v}" class="${lbSel[key] === v ? "sel" : ""}">${n}</button>`).join("");
+    $("#" + id).querySelectorAll("button").forEach(b => b.onclick = () => { lbSel[key] = b.dataset.v; renderLb(); });
+  };
+  mk("lbModes", Object.entries(MODE_NAMES), "mode");
+  mk("lbDiffs", Object.entries(DIFF).map(([k, d]) => [k, d.name]), "diff");
+  const list = lbGet(lbSel.mode, lbSel.diff);
+  $("#lbTable").innerHTML = list.length
+    ? `<ol class="lbl">${list.map((e, i) => `<li><span class="rk">${i + 1}</span><span class="nm">${esc(e.name)}</span><span class="tp">${TYPE_ICON[e.type] || ""} ${e.acc}%</span><b>${e.score}</b></li>`).join("")}</ol>`
+    : `<div class="best" style="margin-top:16px">Поки що порожньо. Зіграйте першими!</div>`;
+}
+$("#lbBtn").onclick = () => { lbSel.mode = settings.mode; lbSel.diff = settings.diff; show("lb"); };
+$("#lbBack").onclick = () => show("menu");
+
 function show(id) {
-  ["menu", "game", "result"].forEach(s => $("#" + s).classList.toggle("hidden", s !== id));
+  ["menu", "game", "result", "lb"].forEach(s => $("#" + s).classList.toggle("hidden", s !== id));
   if (id === "menu") renderMenu();
+  if (id === "lb") renderLb();
   window.scrollTo(0, 0);
 }
 
