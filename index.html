@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Країни світу — вікторина</title>
+<style>
+:root{
+  --bg:#f4f6fb;--card:#fff;--text:#1b2233;--muted:#667089;--line:#dde2ee;
+  --accent:#3b6cf6;--accent-t:#fff;--ok:#16a34a;--ok-bg:#dcfce7;--bad:#dc2626;--bad-bg:#fee2e2;--warn:#f59e0b;
+  --shadow:0 4px 18px rgba(30,40,80,.08);--shape:#3b6cf6;
+}
+:root[data-theme="dark"]{
+  --bg:#12151d;--card:#1c212d;--text:#eaeefa;--muted:#9aa4bd;--line:#2c3446;
+  --accent:#6b8cff;--accent-t:#0e1220;--ok:#4ade80;--ok-bg:#12351f;--bad:#f87171;--bad-bg:#3d1717;
+  --shadow:0 4px 18px rgba(0,0,0,.4);--shape:#6b8cff;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:16px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+h1{font-size:1.4rem;margin:0}
+h2{font-size:1.05rem;margin:18px 0 8px;color:var(--muted);font-weight:600}
+button{font:inherit;color:inherit;cursor:pointer}
+.icon-btn{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
+.hidden{display:none!important}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mode{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:14px;text-align:left}
+.mode b{display:block;font-size:1.05rem}
+.mode span{color:var(--muted);font-size:.85rem}
+.mode.sel,.seg button.sel{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--card))}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{flex:1 1 90px;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:10px 8px}
+.seg small{display:block;color:var(--muted);font-size:.75rem}
+.primary{background:var(--accent);color:var(--accent-t);border:0;border-radius:14px;padding:14px 20px;font-weight:700;width:100%;margin-top:18px;font-size:1.1rem}
+.secondary{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px}
+.best{color:var(--muted);margin-top:10px;font-size:.9rem;text-align:center}
+.note{color:var(--warn);font-size:.85rem;margin-top:8px}
+.hud{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;margin-bottom:10px;font-weight:600}
+.hud .pill{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px 12px}
+.bar{height:8px;background:var(--line);border-radius:6px;overflow:hidden;margin:6px 0}
+.bar>i{display:block;height:100%;background:var(--accent);width:100%;transition:width .1s linear}
+.bar.low>i{background:var(--bad)}
+.stim{display:flex;align-items:center;justify-content:center;min-height:200px;margin:10px 0;border-radius:12px;background:color-mix(in srgb,var(--line) 35%,var(--card));padding:10px}
+.stim img{max-width:100%;max-height:220px;border:1px solid var(--line);border-radius:6px;box-shadow:var(--shadow)}
+.stim svg{width:100%;max-width:420px;height:220px}
+.stim svg path{fill:var(--shape);stroke:var(--card);stroke-width:.6}
+.stim .big{font-size:2rem;font-weight:800;text-align:center}
+.stim .emoji{font-size:7rem}
+.q{text-align:center;font-size:1.15rem;font-weight:700;margin:6px 0 10px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:14px 8px;font-weight:600}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.ok{background:var(--ok-bg);border-color:var(--ok)}
+.opt.bad{background:var(--bad-bg);border-color:var(--bad)}
+.opt:disabled{cursor:default}
+.opt.gone{visibility:hidden}
+.typed{display:flex;gap:8px;position:relative}
+.typed input{flex:1;font:inherit;padding:12px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--text)}
+.typed input:focus{outline:none;border-color:var(--accent)}
+.typed .go{background:var(--accent);color:var(--accent-t);border:0;border-radius:12px;padding:0 18px;font-weight:700}
+.sugg{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.sugg button{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:.9rem}
+.fb{margin-top:12px;border-radius:12px;padding:12px;font-size:.95rem}
+.fb.ok{background:var(--ok-bg)}.fb.bad{background:var(--bad-bg)}
+.fb .fact{color:var(--muted);margin-top:4px;font-size:.88rem}
+.row{display:flex;gap:10px;margin-top:12px}
+.row>*{flex:1}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center;margin:12px 0}
+.stats div{background:color-mix(in srgb,var(--line) 35%,var(--card));border-radius:12px;padding:10px}
+.stats b{display:block;font-size:1.4rem}
+.mlist{list-style:none;padding:0;margin:8px 0}
+.mlist li{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}
+.mlist img{width:36px;border-radius:3px;border:1px solid var(--line)}
+@media(max-width:480px){.modes{grid-template-columns:1fr}.opts{grid-template-columns:1fr}.stim .emoji{font-size:5rem}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🌍 Країни світу</h1>
+    <button class="icon-btn" id="themeBtn" title="Змінити тему">🌓</button>
+  </header>
+
+  <!-- МЕНЮ -->
+  <section id="menu">
+    <div class="card">
+      <h2 style="margin-top:0">Режим</h2>
+      <div class="modes" id="modeBtns">
+        <button class="mode" data-v="flags"><b>🚩 Прапори</b><span>Вгадай країну за прапором</span></button>
+        <button class="mode" data-v="contours"><b>🗺️ Контури</b><span>Вгадай країну за силуетом</span></button>
+        <button class="mode" data-v="capitals"><b>🏛️ Столиці</b><span>Назви столицю країни</span></button>
+        <button class="mode" data-v="all"><b>🎲 Все разом</b><span>Прапор + контур + столиця</span></button>
+      </div>
+      <h2>Складність</h2>
+      <div class="seg" id="diffBtns">
+        <button data-v="easy">Легкий<small>~45 країн · 4 варіанти</small></button>
+        <button data-v="medium">Середній<small>~110 країн · 4 варіанти</small></button>
+        <button data-v="hard">Складний<small>усі · вручну + підказки</small></button>
+        <button data-v="expert">Експерт<small>усі · вручну</small></button>
+      </div>
+      <h2>Тип гри</h2>
+      <div class="seg" id="typeBtns">
+        <button data-v="time">⏱ На час</button>
+        <button data-v="lives">❤️ На помилки</button>
+        <button data-v="free">🧘 Вільний</button>
+      </div>
+      <div id="timeOpt" class="hidden">
+        <h2>Загальний час</h2>
+        <div class="seg" id="totalBtns">
+          <button data-v="60">60 с</button><button data-v="120">120 с</button><button data-v="180">180 с</button>
+        </div>
+        <div class="best">Правильна відповідь: +3 с · помилка: −5 с</div>
+      </div>
+      <div class="note hidden" id="atlasNote"></div>
+      <button class="primary" id="startBtn">Грати</button>
+      <div class="best" id="bestLine"></div>
+    </div>
+  </section>
+
+  <!-- ГРА -->
+  <section id="game" class="hidden">
+    <div class="card">
+      <div class="hud">
+        <span class="pill" id="hScore">0</span>
+        <span class="pill" id="hLives"></span>
+        <span class="pill" id="hTotal"></span>
+        <span class="pill" id="hStreak"></span>
+        <button class="icon-btn" id="quitBtn">Завершити</button>
+      </div>
+      <div class="bar" id="qBar"><i></i></div>
+      <div class="q" id="qText"></div>
+      <div class="stim" id="stim"></div>
+      <div id="answer"></div>
+      <div class="row hidden" id="hintRow"><button class="secondary" id="hintBtn">💡 Підказка (без бонусу за швидкість)</button></div>
+      <div id="fb"></div>
+      <div class="row hidden" id="nextRow"><button class="primary" id="nextBtn" style="margin-top:0">Далі ⏎</button></div>
+    </div>
+  </section>
+
+  <!-- РЕЗУЛЬТАТ -->
+  <section id="result" class="hidden">
+    <div class="card">
+      <h2 style="margin-top:0;color:var(--text)" id="rTitle">Гру завершено</h2>
+      <div id="rReason" class="best" style="text-align:left;margin:0"></div>
+      <div class="stats">
+        <div><b id="rScore">0</b>очки</div>
+        <div><b id="rAcc">0%</b>точність</div>
+        <div><b id="rStreak">0</b>найкраща серія</div>
+      </div>
+      <div id="rRecord" class="best"></div>
+      <div id="rMistakes"></div>
+      <div class="row">
+        <button class="secondary hidden" id="reviewBtn">🔁 Повторити помилки</button>
+        <button class="secondary" id="againBtn">Грати знову</button>
+        <button class="secondary" id="menuBtn">Меню</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<script>
+"use strict";
+/* =====================================================================
+   1. ДАНІ
+   Формат рядка: код|назва|столиця|регіон|рівень(1-3)|англ. назва|[назва в атласі]
+   Рівень 1 — відомі країни (легкий), 2 — середній, 3 — решта.
+   Щоб додати країну — просто допишіть рядок у відповідний блок.
+   ===================================================================== */
+const RAW = `
+al|Албанія|Тирана|Європа|3|Albania
+ad|Андорра|Андорра-ла-Велья|Європа|3|Andorra
+at|Австрія|Відень|Європа|2|Austria
+by|Білорусь|Мінськ|Європа|2|Belarus
+be|Бельгія|Брюссель|Європа|2|Belgium
+ba|Боснія і Герцеговина|Сараєво|Європа|3|Bosnia and Herzegovina|Bosnia and Herz.
+bg|Болгарія|Софія|Європа|2|Bulgaria
+hr|Хорватія|Загреб|Європа|2|Croatia
+cy|Кіпр|Нікосія|Європа|3|Cyprus
+cz|Чехія|Прага|Європа|1|Czechia
+dk|Данія|Копенгаген|Європа|2|Denmark
+ee|Естонія|Таллінн|Європа|2|Estonia
+fi|Фінляндія|Гельсінкі|Європа|1|Finland
+fr|Франція|Париж|Європа|1|France
+de|Німеччина|Берлін|Європа|1|Germany
+gr|Греція|Афіни|Європа|1|Greece
+hu|Угорщина|Будапешт|Європа|2|Hungary
+is|Ісландія|Рейк'явік|Європа|2|Iceland
+ie|Ірландія|Дублін|Європа|1|Ireland
+it|Італія|Рим|Європа|1|Italy
+lv|Латвія|Рига|Європа|2|Latvia
+li|Ліхтенштейн|Вадуц|Європа|3|Liechtenstein
+lt|Литва|Вільнюс|Європа|2|Lithuania
+lu|Люксембург|Люксембург|Європа|3|Luxembourg
+mt|Мальта|Валлетта|Європа|3|Malta
+md|Молдова|Кишинів|Європа|2|Moldova
+mc|Монако|Монако|Європа|3|Monaco
+me|Чорногорія|Подгориця|Європа|3|Montenegro
+nl|Нідерланди|Амстердам|Європа|1|Netherlands
+mk|Північна Македонія|Скоп'є|Європа|3|North Macedonia|Macedonia
+no|Норвегія|Осло|Європа|1|Norway
+pl|Польща|Варшава|Європа|1|Poland
+pt|Португалія|Лісабон|Європа|1|Portugal
+ro|Румунія|Бухарест|Європа|2|Romania
+ru|Росія|Москва|Європа|1|Russia
+sm|Сан-Марино|Сан-Марино|Європа|3|San Marino
+rs|Сербія|Белград|Європа|2|Serbia
+sk|Словаччина|Братислава|Європа|2|Slovakia
+si|Словенія|Любляна|Європа|2|Slovenia
+es|Іспанія|Мадрид|Європа|1|Spain
+se|Швеція|Стокгольм|Європа|1|Sweden
+ch|Швейцарія|Берн|Європа|1|Switzerland
+ua|Україна|Київ|Європа|1|Ukraine
+gb|Велика Британія|Лондон|Європа|1|United Kingdom
+va|Ватикан|Ватикан|Європа|3|Vatican City
+tr|Туреччина|Анкара|Азія|1|Turkey
+af|Афганістан|Кабул|Азія|2|Afghanistan
+am|Вірменія|Єреван|Азія|2|Armenia
+az|Азербайджан|Баку|Азія|2|Azerbaijan
+bh|Бахрейн|Манама|Азія|3|Bahrain
+bd|Бангладеш|Дакка|Азія|2|Bangladesh
+bt|Бутан|Тхімпху|Азія|3|Bhutan
+bn|Бруней|Бандар-Сері-Бегаван|Азія|3|Brunei
+kh|Камбоджа|Пномпень|Азія|2|Cambodia
+cn|Китай|Пекін|Азія|1|China
+ge|Грузія|Тбілісі|Азія|2|Georgia
+in|Індія|Нью-Делі|Азія|1|India
+id|Індонезія|Джакарта|Азія|1|Indonesia
+ir|Іран|Тегеран|Азія|2|Iran
+iq|Ірак|Багдад|Азія|2|Iraq
+il|Ізраїль|Єрусалим|Азія|1|Israel
+jp|Японія|Токіо|Азія|1|Japan
+jo|Йорданія|Амман|Азія|2|Jordan
+kz|Казахстан|Астана|Азія|2|Kazakhstan
+kw|Кувейт|Ель-Кувейт|Азія|3|Kuwait
+kg|Киргизстан|Бішкек|Азія|3|Kyrgyzstan
+la|Лаос|Вієнтьян|Азія|3|Laos
+lb|Ліван|Бейрут|Азія|2|Lebanon
+my|Малайзія|Куала-Лумпур|Азія|2|Malaysia
+mv|Мальдіви|Мале|Азія|3|Maldives
+mn|Монголія|Улан-Батор|Азія|2|Mongolia
+mm|М'янма|Нейп'їдо|Азія|3|Myanmar
+np|Непал|Катманду|Азія|2|Nepal
+kp|Північна Корея|Пхеньян|Азія|2|North Korea
+om|Оман|Маскат|Азія|3|Oman
+pk|Пакистан|Ісламабад|Азія|2|Pakistan
+ph|Філіппіни|Маніла|Азія|2|Philippines
+qa|Катар|Доха|Азія|3|Qatar
+sa|Саудівська Аравія|Ер-Ріяд|Азія|1|Saudi Arabia
+sg|Сінгапур|Сінгапур|Азія|2|Singapore
+kr|Південна Корея|Сеул|Азія|1|South Korea
+lk|Шрі-Ланка|Шрі-Джаяварденепура-Котте|Азія|3|Sri Lanka
+sy|Сирія|Дамаск|Азія|2|Syria
+tj|Таджикистан|Душанбе|Азія|3|Tajikistan
+th|Таїланд|Бангкок|Азія|1|Thailand
+tl|Східний Тимор|Дилі|Азія|3|Timor-Leste
+tm|Туркменістан|Ашгабат|Азія|3|Turkmenistan
+ae|ОАЕ|Абу-Дабі|Азія|2|United Arab Emirates
+uz|Узбекистан|Ташкент|Азія|2|Uzbekistan
+vn|В'єтнам|Ханой|Азія|1|Vietnam
+ye|Ємен|Сана|Азія|3|Yemen
+dz|Алжир|Алжир|Африка|2|Algeria
+ao|Ангола|Луанда|Африка|3|Angola
+bj|Бенін|Порто-Ново|Африка|3|Benin
+bw|Ботсвана|Габороне|Африка|3|Botswana
+bf|Буркіна-Фасо|Уагадугу|Африка|3|Burkina Faso
+bi|Бурунді|Гітега|Африка|3|Burundi
+cv|Кабо-Верде|Прая|Африка|3|Cape Verde
+cm|Камерун|Яунде|Африка|3|Cameroon
+cf|ЦАР|Банґі|Африка|3|Central African Republic|Central African Rep.
+td|Чад|Нджамена|Африка|3|Chad
+km|Комори|Морони|Африка|3|Comoros
+cg|Республіка Конго|Браззавіль|Африка|3|Republic of the Congo|Congo
+cd|ДР Конго|Кіншаса|Африка|3|DR Congo|Dem. Rep. Congo
+ci|Кот-д'Івуар|Ямусукро|Африка|3|Ivory Coast|Côte d'Ivoire
+dj|Джибуті|Джибуті|Африка|3|Djibouti
+eg|Єгипет|Каїр|Африка|1|Egypt
+gq|Екваторіальна Гвінея|Малабо|Африка|3|Equatorial Guinea|Eq. Guinea
+er|Еритрея|Асмера|Африка|3|Eritrea
+sz|Есватіні|Мбабане|Африка|3|Eswatini|eSwatini
+et|Ефіопія|Аддис-Абеба|Африка|2|Ethiopia
+ga|Габон|Лібревіль|Африка|3|Gabon
+gm|Гамбія|Банжул|Африка|3|Gambia
+gh|Гана|Аккра|Африка|2|Ghana
+gn|Гвінея|Конакрі|Африка|3|Guinea
+gw|Гвінея-Бісау|Бісау|Африка|3|Guinea-Bissau
+ke|Кенія|Найробі|Африка|2|Kenya
+ls|Лесото|Масеру|Африка|3|Lesotho
+lr|Ліберія|Монровія|Африка|3|Liberia
+ly|Лівія|Тріполі|Африка|2|Libya
+mg|Мадагаскар|Антананаріву|Африка|2|Madagascar
+mw|Малаві|Лілонгве|Африка|3|Malawi
+ml|Малі|Бамако|Африка|3|Mali
+mr|Мавританія|Нуакшот|Африка|3|Mauritania
+mu|Маврикій|Порт-Луї|Африка|3|Mauritius
+ma|Марокко|Рабат|Африка|2|Morocco
+mz|Мозамбік|Мапуту|Африка|3|Mozambique
+na|Намібія|Віндгук|Африка|3|Namibia
+ne|Нігер|Ніамей|Африка|3|Niger
+ng|Нігерія|Абуджа|Африка|2|Nigeria
+rw|Руанда|Кігалі|Африка|3|Rwanda
+st|Сан-Томе і Принсіпі|Сан-Томе|Африка|3|Sao Tome and Principe
+sn|Сенегал|Дакар|Африка|2|Senegal
+sc|Сейшели|Вікторія|Африка|3|Seychelles
+sl|Сьєрра-Леоне|Фрітаун|Африка|3|Sierra Leone
+so|Сомалі|Могадішо|Африка|3|Somalia
+za|ПАР|Преторія|Африка|1|South Africa
+ss|Південний Судан|Джуба|Африка|3|South Sudan|S. Sudan
+sd|Судан|Хартум|Африка|3|Sudan
+tz|Танзанія|Додома|Африка|2|Tanzania
+tg|Того|Ломе|Африка|3|Togo
+tn|Туніс|Туніс|Африка|2|Tunisia
+ug|Уганда|Кампала|Африка|2|Uganda
+zm|Замбія|Лусака|Африка|3|Zambia
+zw|Зімбабве|Хараре|Африка|3|Zimbabwe
+ag|Антигуа і Барбуда|Сент-Джонс|Північна Америка|3|Antigua and Barbuda
+bs|Багамські Острови|Нассау|Північна Америка|3|Bahamas
+bb|Барбадос|Бріджтаун|Північна Америка|3|Barbados
+bz|Беліз|Бельмопан|Північна Америка|3|Belize
+ca|Канада|Оттава|Північна Америка|1|Canada
+cr|Коста-Рика|Сан-Хосе|Північна Америка|2|Costa Rica
+cu|Куба|Гавана|Північна Америка|1|Cuba
+dm|Домініка|Розо|Північна Америка|3|Dominica
+do|Домініканська Республіка|Санто-Домінго|Північна Америка|3|Dominican Republic|Dominican Rep.
+sv|Сальвадор|Сан-Сальвадор|Північна Америка|3|El Salvador
+gd|Гренада|Сент-Джорджес|Північна Америка|3|Grenada
+gt|Гватемала|Гватемала|Північна Америка|3|Guatemala
+ht|Гаїті|Порт-о-Пренс|Північна Америка|3|Haiti
+hn|Гондурас|Тегусігальпа|Північна Америка|3|Honduras
+jm|Ямайка|Кінгстон|Північна Америка|2|Jamaica
+mx|Мексика|Мехіко|Північна Америка|1|Mexico
+ni|Нікарагуа|Манагуа|Північна Америка|3|Nicaragua
+pa|Панама|Панама|Північна Америка|2|Panama
+kn|Сент-Кітс і Невіс|Бастер|Північна Америка|3|Saint Kitts and Nevis
+lc|Сент-Люсія|Кастрі|Північна Америка|3|Saint Lucia
+vc|Сент-Вінсент і Гренадини|Кінгстаун|Північна Америка|3|Saint Vincent and the Grenadines
+tt|Тринідад і Тобаго|Порт-оф-Спейн|Північна Америка|3|Trinidad and Tobago
+us|США|Вашингтон|Північна Америка|1|United States|United States of America
+ar|Аргентина|Буенос-Айрес|Південна Америка|1|Argentina
+bo|Болівія|Сукре|Південна Америка|3|Bolivia
+br|Бразилія|Бразиліа|Південна Америка|1|Brazil
+cl|Чилі|Сантьяго|Південна Америка|1|Chile
+co|Колумбія|Богота|Південна Америка|2|Colombia
+ec|Еквадор|Кіто|Південна Америка|2|Ecuador
+gy|Гаяна|Джорджтаун|Південна Америка|3|Guyana
+py|Парагвай|Асунсьйон|Південна Америка|3|Paraguay
+pe|Перу|Ліма|Південна Америка|2|Peru
+sr|Суринам|Парамарибо|Південна Америка|3|Suriname
+uy|Уругвай|Монтевідео|Південна Америка|2|Uruguay
+ve|Венесуела|Каракас|Південна Америка|2|Venezuela
+au|Австралія|Канберра|Океанія|1|Australia
+fj|Фіджі|Сува|Океанія|3|Fiji
+ki|Кірибаті|Південна Тарава|Океанія|3|Kiribati
+mh|Маршаллові Острови|Маджуро|Океанія|3|Marshall Islands
+fm|Мікронезія|Палікір|Океанія|3|Micronesia
+nr|Науру|Ярен|Океанія|3|Nauru
+nz|Нова Зеландія|Веллінгтон|Океанія|1|New Zealand
+pw|Палау|Нгерулмуд|Океанія|3|Palau
+pg|Папуа-Нова Гвінея|Порт-Морсбі|Океанія|3|Papua New Guinea
+ws|Самоа|Апіа|Океанія|3|Samoa
+sb|Соломонові Острови|Хоніара|Океанія|3|Solomon Islands|Solomon Is.
+to|Тонга|Нукуалофа|Океанія|3|Tonga
+tv|Тувалу|Фунафуті|Океанія|3|Tuvalu
+vu|Вануату|Порт-Віла|Океанія|3|Vanuatu
+`;
+
+const COUNTRIES = RAW.trim().split("\n").map(l => {
+  const [code, name, capital, region, tier, en, atlas] = l.split("|");
+  return { code, name, capital, region, tier: +tier, en, atlas: atlas || en };
+});
+const BY_CODE = Object.fromEntries(COUNTRIES.map(c => [c.code, c]));
+
+// Групи країн із схожими прапорами — з них добираються «підступні» варіанти відповіді
+const SIMILAR = [
+  ["ro","td","ad","md"],["id","mc","pl"],["ie","ci","it","mx","hu"],["au","nz"],
+  ["no","is","dk","fi","se"],["ve","co","ec"],["sk","si","ru","rs","cz"],
+  ["nl","lu","fr"],["sn","ml","gn","cm","gh"],["bd","jp","pw"],["ch","tn"],["sa","pk"]
+];
+
+// Альтернативні написання відповідей
+const ALIAS_COUNTRY = {
+  us:["сша","америка","сполучені штати","сполучені штати америки"], gb:["британія","великобританія","об'єднане королівство"],
+  ae:["оае","емірати","об'єднані арабські емірати"], cd:["др конго","демократична республіка конго"],
+  cg:["конго","республіка конго"], cf:["цар","центральноафриканська республіка"], za:["пар","південна африка"],
+  mm:["бірма","мянма"], cz:["чехія","чеська республіка"], mk:["македонія"], sz:["свазіленд","есваттіні"],
+  tl:["тимор-лешті","східний тимор"], ci:["кот дівуар","берег слонової кістки"], do:["домінікана"],
+  by:["беларусь"], ru:["російська федерація"], bs:["багами"], va:["ватикан","місто ватикан"], kp:["кндр"], kr:["республіка корея"]
+};
+const ALIAS_CAPITAL = {
+  in:["делі"], sa:["ріяд"], lk:["коломбо","шрі-джаяварденепура"], ci:["абіджан"], za:["кейптаун","блумфонтейн"],
+  bo:["ла-пас"], nl:["гаага"], mm:["найп'їдо","нейпьїдо"], tz:["дар-ес-салам"], kw:["кувейт"], is:["рейк'явік","рейкьявік"],
+  zw:["хараре"], mc:["монако-вілль"], ad:["андорра"], cv:["прая"]
+};
+
+// Цікаві факти (для тих країн, де вони є)
+const FACTS = {
+  ua:"Найбільша за площею країна, що повністю лежить у Європі.", ru:"Найбільша країна світу за площею.",
+  va:"Найменша незалежна держава світу.", mc:"Одна з найщільніше населених країн світу.",
+  ca:"Має найдовшу берегову лінію у світі.", au:"Столицю Канберру обрали як компроміс між Сіднеєм і Мельбурном.",
+  br:"Єдина португаломовна країна Південної Америки.", jp:"Складається з понад 6800 островів.",
+  is:"Острів із потужною вулканічною та геотермальною активністю.", eg:"Тут розташовані піраміди Гізи.",
+  in:"Найбільша за населенням країна світу.", cn:"Тут розташована Велика Китайська стіна.",
+  nz:"Першою у світі надала жінкам право голосу (1893).", ch:"Має чотири офіційні мови.",
+  no:"Країна фіордів.", cl:"Найдовша з півночі на південь країна світу.", za:"Має три столиці.",
+  bo:"Має дві столиці: конституційну Сукре і фактичну Ла-Пас.", np:"Єдиний у світі національний прапор не прямокутної форми.",
+  mn:"Одна з найрідше населених країн світу.", fi:"Країна тисячі озер.", tr:"Лежить одночасно в Європі та Азії.",
+  kz:"Найбільша у світі країна без виходу до океану.", sg:"Місто-держава.", ng:"Найбільша за населенням країна Африки.",
+  fr:"Одна з найвідвідуваніших країн світу.", it:"Одна з країн із найбільшою кількістю об'єктів ЮНЕСКО.",
+  us:"Складається з 50 штатів.", mv:"Найнижча за висотою країна світу.", ie:"Символ країни — трилисник."
+};
+
+/* =====================================================================
+   2. НАЛАШТУВАННЯ РІВНІВ
+   ===================================================================== */
+const DIFF = {
+  easy:   { name:"Легкий",   mult:1,   qtime:30, maxTier:1, choices:true,  hints:true,  suggest:false, fuzzy:false },
+  medium: { name:"Середній", mult:1.5, qtime:20, maxTier:2, choices:true,  hints:false, suggest:false, fuzzy:false },
+  hard:   { name:"Складний", mult:2,   qtime:15, maxTier:3, choices:false, hints:false, suggest:true,  fuzzy:true  },
+  expert: { name:"Експерт",  mult:3,   qtime:10, maxTier:3, choices:false, hints:false, suggest:false, fuzzy:false }
+};
+const MODE_NAMES = { flags:"Прапори", contours:"Контури", capitals:"Столиці", all:"Все разом" };
+const TIME_BONUS = 3, TIME_PENALTY = 5, LIVES = 3;
+// Країни, у яких на контурі залишається лише найбільша частина (без заморських територій)
+const MAINLAND = new Set(["fr","nl","us","no","es","pt","dk"]);
+
+/* =====================================================================
+   3. КОНТУРИ (d3 + world-atlas)
+   ===================================================================== */
+const geo = {};            // код країни -> GeoJSON feature
+let atlasState = "loading"; // loading | ok | fail
+
+async function loadAtlas() {
+  atlasState = "loading"; updateAtlasNote();
+  try {
+    if (typeof d3 === "undefined" || typeof topojson === "undefined") throw new Error("libs");
+    const topo = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json").then(r => r.json());
+    const feats = topojson.feature(topo, topo.objects.countries).features;
+    const byName = new Map(feats.map(f => [String(f.properties.name).toLowerCase(), f]));
+    COUNTRIES.forEach(c => {
+      const f = byName.get(c.atlas.toLowerCase()) || byName.get(c.en.toLowerCase());
+      if (f) geo[c.code] = f;
+    });
+    atlasState = "ok";
+  } catch (e) { atlasState = "fail"; }
+  updateAtlasNote();
+}
+
+function contourSVG(code) {
+  let f = geo[code];
+  if (MAINLAND.has(code) && f.geometry.type === "MultiPolygon") {
+    const parts = f.geometry.coordinates.map(co => ({ type:"Polygon", coordinates:co }));
+    parts.sort((a, b) => d3.geoArea(b) - d3.geoArea(a));
+    f = { type:"Feature", properties:{}, geometry:parts[0] };
+  }
+  const proj = d3.geoNaturalEarth1().fitExtent([[10,10],[290,210]], f);
+  const d = d3.geoPath(proj)(f);
+  return `<svg viewBox="0 0 300 220" role="img" aria-label="Контур країни"><path d="${d}"/></svg>`;
+}
+
+/* =====================================================================
+   4. ДОПОМІЖНІ ФУНКЦІЇ
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pick = a => a[Math.random() * a.length | 0];
+const norm = s => s.toLowerCase().replace(/[’'ʼ`´]/g, "").replace(/[-–—.,]/g, " ").replace(/\s+/g, " ").trim();
+const emojiFlag = code => code.toUpperCase().replace(/./g, ch => String.fromCodePoint(127397 + ch.charCodeAt(0)));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+
+function lev(a, b) {
+  const m = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= b.length; j++) m[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++)
+    m[i][j] = Math.min(m[i-1][j] + 1, m[i][j-1] + 1, m[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+  return m[a.length][b.length];
+}
+
+// Перевірка введеної вручну відповіді
+function typedCorrect(text, c, ask, fuzzy) {
+  const t = norm(text);
+  if (!t) return false;
+  const list = ask === "country" ? [c.name, c.en, ...(ALIAS_COUNTRY[c.code] || [])]
+                                 : [c.capital, ...(ALIAS_CAPITAL[c.code] || [])];
+  return list.map(norm).some(v => v === t || (fuzzy && v.length >= 6 && lev(v, t) <= 1));
+}
+
+const label = (c, ask) => ask === "country" ? c.name : c.capital;
+
+/* =====================================================================
+   5. СТАН ТА ЛОГІКА ГРИ
+   ===================================================================== */
+const settings = Object.assign({ mode:"flags", diff:"easy", type:"time", total:120 }, store.get("cq_settings", {}));
+let G = null;
+
+function buildPool(mode, diff) {
+  const d = DIFF[diff];
+  let pool = COUNTRIES.filter(c => c.tier <= d.maxTier);
+  if (mode === "contours") pool = pool.filter(c => geo[c.code]);
+  return pool;
+}
+
+function startGame(opts) {
+  const d = DIFF[opts.diff];
+  const pool = opts.codes ? opts.codes.map(c => BY_CODE[c]) : buildPool(opts.mode, opts.diff);
+  G = {
+    ...opts, d, pool,
+    queue: [], score: 0, streak: 0, bestStreak: 0, asked: 0, correct: 0, mistakes: [],
+    lives: LIVES, totalLeft: opts.total, qLeft: 0, state: "asking", q: null, step: 0, hinted: false, reason: ""
+  };
+  show("game");
+  nextQuestion();
+}
+
+function drawCountry() {
+  if (!G.queue.length) G.queue = shuffle(G.pool);
+  return G.queue.pop();
+}
+
+function makeQuestion() {
+  const c = drawCountry();
+  const hasContour = !!geo[c.code];
+  const stimOptions = () => { const o = ["flag"]; if (hasContour) o.push("contour"); return o; };
+  let kind, stim, steps;
+  if (G.mode === "flags")         { kind = "flag"; stim = "flag"; steps = ["country"]; }
+  else if (G.mode === "contours") { kind = "contour"; stim = "contour"; steps = ["country"]; }
+  else if (G.mode === "capitals") { kind = "capital"; stim = pick(["name", ...stimOptions()]); steps = ["capital"]; }
+  else {
+    const r = Math.random();
+    if (r < 0.28)      { kind = "flag"; stim = "flag"; steps = ["country"]; }
+    else if (r < 0.52 && hasContour) { kind = "contour"; stim = "contour"; steps = ["country"]; }
+    else if (r < 0.78) { kind = "capital"; stim = pick(["name", ...stimOptions()]); steps = ["capital"]; }
+    else               { kind = "combo"; stim = pick(stimOptions()); steps = ["country", "capital"]; }
+  }
+  return { c, kind, stim, steps };
+}
+
+function nextQuestion() {
+  G.q = makeQuestion();
+  G.step = 0;
+  renderStep();
+}
+
+function qTime() { return G.d.qtime; }
+
+function renderStep() {
+  const { c, stim, steps } = G.q;
+  const ask = steps[G.step];
+  G.state = "asking"; G.hinted = false;
+  G.qLeft = qTime();
+
+  // зображення / стимул
+  const box = $("#stim");
+  if (stim === "flag") {
+    box.innerHTML = `<img alt="Прапор" src="https://flagcdn.com/w320/${c.code}.png">`;
+    box.firstChild.onerror = () => { box.innerHTML = `<div class="emoji">${emojiFlag(c.code)}</div>`; };
+  } else if (stim === "contour") box.innerHTML = contourSVG(c.code);
+  else box.innerHTML = `<div class="big">${c.name}</div>`;
+
+  const stepInfo = steps.length > 1 ? ` (${G.step + 1}/${steps.length})` : "";
+  $("#qText").textContent = (ask === "country" ? "Яка це країна?" : stim === "name" ? "Яка столиця цієї країни?" : "Яка столиця цієї країни?") + stepInfo;
+
+  $("#fb").innerHTML = "";
+  $("#nextRow").classList.add("hidden");
+  $("#hintRow").classList.toggle("hidden", !(G.d.hints && G.d.choices));
+  $("#hintBtn").disabled = false;
+
+  if (G.d.choices) renderChoices(c, ask); else renderTyped(c, ask);
+  updateHud();
+}
+
+function makeOptions(c, ask) {
+  const groups = SIMILAR.filter(g => g.includes(c.code)).flat();
+  const cand = G.pool.filter(x => x.code !== c.code && label(x, ask) !== label(c, ask));
+  const scored = cand.map(x => ({ x, s: (groups.includes(x.code) ? 3 : 0) + (x.region === c.region ? 1 : 0) + Math.random() * 2 }))
+                     .sort((a, b) => b.s - a.s).slice(0, 3).map(o => o.x);
+  return shuffle([c, ...scored]);
+}
+
+function renderChoices(c, ask) {
+  const html = makeOptions(c, ask).map(o =>
+    `<button class="opt" data-code="${o.code}">${label(o, ask)}</button>`).join("");
+  $("#answer").innerHTML = `<div class="opts">${html}</div>`;
+  $("#answer").querySelectorAll(".opt").forEach(b => b.onclick = () => submit(b.dataset.code === c.code, b));
+}
+
+function renderTyped(c, ask) {
+  $("#answer").innerHTML = `
+    <div class="typed"><input id="inp" autocomplete="off" autocapitalize="off" spellcheck="false"
+      placeholder="${ask === "country" ? "Назва країни…" : "Назва столиці…"}"><button class="go" id="goBtn">OK</button></div>
+    <div class="sugg" id="sugg"></div>`;
+  const inp = $("#inp");
+  const send = () => { if (G.state === "asking" && inp.value.trim()) submit(typedCorrect(inp.value, c, ask, G.d.fuzzy)); };
+  $("#goBtn").onclick = send;
+  inp.onkeydown = e => { if (e.key === "Enter") { e.preventDefault(); send(); } };
+  if (G.d.suggest) {
+    inp.oninput = () => {
+      const t = norm(inp.value), box = $("#sugg");
+      if (t.length < 2) { box.innerHTML = ""; return; }
+      const names = COUNTRIES.map(x => label(x, ask));
+      const res = [...new Set(names)].filter(n => norm(n).includes(t))
+        .sort((a, b) => (norm(b).startsWith(t) - norm(a).startsWith(t)) || a.localeCompare(b)).slice(0, 6);
+      box.innerHTML = res.map(n => `<button type="button">${n}</button>`).join("");
+      box.querySelectorAll("button").forEach(b => b.onclick = () => { inp.value = b.textContent; inp.focus(); });
+    };
+  }
+  if (!matchMedia("(pointer:coarse)").matches) inp.focus();
+}
+
+$("#hintBtn").onclick = () => {
+  if (G.state !== "asking" || G.hinted) return;
+  G.hinted = true; $("#hintBtn").disabled = true;
+  const wrong = [...$("#answer").querySelectorAll(".opt")].filter(b => b.dataset.code !== G.q.c.code);
+  shuffle(wrong).slice(0, 2).forEach(b => { b.classList.add("gone"); b.disabled = true; });
+};
+
+function submit(ok, btn) {
+  if (G.state !== "asking") return;
+  G.state = "feedback";
+  const { c, steps } = G.q;
+  const ask = steps[G.step];
+  const last = G.step === steps.length - 1;
+  const hasTimers = G.type !== "free";
+
+  if (G.d.choices) {
+    $("#answer").querySelectorAll(".opt").forEach(b => {
+      b.disabled = true;
+      if (b.dataset.code === c.code) b.classList.add("ok");
+    });
+    if (!ok && btn) btn.classList.add("bad");
+  } else {
+    $("#inp").disabled = true; $("#goBtn").disabled = true;
+    $("#inp").style.borderColor = ok ? "var(--ok)" : "var(--bad)";
+  }
+  $("#hintRow").classList.add("hidden");
+
+  let gained = 0;
+  if (ok) {
+    G.streak++; G.bestStreak = Math.max(G.bestStreak, G.streak);
+    const base = 100 * G.d.mult;
+    const speed = hasTimers && !G.hinted ? Math.round(base * 0.5 * Math.max(0, G.qLeft) / qTime()) : 0;
+    const streakB = Math.min(G.streak, 10) * 10;
+    gained = Math.round(base) + speed + streakB;
+    G.score += gained;
+  } else {
+    G.streak = 0;
+  }
+  updateHud();
+
+  if (ok && !last) {            // комбо: перший крок вірний — переходимо до другого
+    setTimeout(() => { G.step++; renderStep(); }, 700);
+    return;
+  }
+
+  // питання завершено
+  G.asked++;
+  if (ok) {
+    G.correct++;
+    if (G.type === "time") G.totalLeft += TIME_BONUS;
+  } else {
+    G.mistakes.push(c.code);
+    if (G.type === "lives") G.lives--;
+    if (G.type === "time") G.totalLeft -= TIME_PENALTY;
+  }
+  updateHud();
+
+  const fact = FACTS[c.code] ? `<div class="fact">💡 ${FACTS[c.code]}</div>` : "";
+  $("#fb").innerHTML = `<div class="fb ${ok ? "ok" : "bad"}">
+    <b>${ok ? `✅ Правильно! +${gained}` : "❌ Неправильно"}</b><br>
+    ${emojiFlag(c.code)} ${c.name} · столиця: ${c.capital} · ${c.region}${fact}</div>`;
+
+  if (G.lives <= 0) return finish("Життя закінчились.");
+  if (G.type === "time" && G.totalLeft <= 0) return finish("Час вийшов.");
+  $("#nextRow").classList.remove("hidden");
+  $("#nextBtn").focus();
+}
+
+// Таймер (крок 100 мс)
+setInterval(() => {
+  if (!G || G.state !== "asking" || G.type === "free" || $("#game").classList.contains("hidden")) return;
+  G.qLeft -= 0.1;
+  if (G.type === "time") G.totalLeft -= 0.1;
+  if (G.type === "time" && G.totalLeft <= 0) { G.totalLeft = 0; updateHud(); return finish("Час вийшов."); }
+  if (G.qLeft <= 0) { G.qLeft = 0; updateHud(); return submit(false, null); }
+  updateHud();
+}, 100);
+
+function updateHud() {
+  if (!G) return;
+  $("#hScore").textContent = `⭐ ${G.score}`;
+  $("#hStreak").textContent = `🔥 ${G.streak}`;
+  $("#hLives").classList.toggle("hidden", G.type !== "lives");
+  $("#hLives").textContent = "❤️".repeat(Math.max(0, G.lives)) + "🖤".repeat(Math.max(0, LIVES - G.lives));
+  $("#hTotal").classList.toggle("hidden", G.type !== "time");
+  $("#hTotal").textContent = `⏱ ${Math.max(0, Math.ceil(G.totalLeft))} с`;
+  const bar = $("#qBar");
+  bar.classList.toggle("hidden", G.type === "free");
+  const frac = Math.max(0, G.qLeft / qTime());
+  bar.firstElementChild.style.width = (frac * 100) + "%";
+  bar.classList.toggle("low", frac < 0.25);
+}
+
+$("#nextBtn").onclick = () => { if (G.state === "feedback") nextQuestion(); };
+$("#quitBtn").onclick = () => finish("Гру завершено достроково.");
+
+/* =====================================================================
+   6. РЕЗУЛЬТАТ
+   ===================================================================== */
+function finish(reason) {
+  if (!G || G.state === "over") return;
+  G.state = "over";
+  const acc = G.asked ? Math.round(G.correct / G.asked * 100) : 0;
+  $("#rReason").textContent = `${reason} Режим: ${MODE_NAMES[G.mode]} · ${G.d.name}.`;
+  $("#rScore").textContent = G.score;
+  $("#rAcc").textContent = acc + "%";
+  $("#rStreak").textContent = G.bestStreak;
+
+  let rec = "";
+  if (G.type !== "free" && !G.review) {
+    const key = `cq_best_${G.mode}_${G.diff}`;
+    const prev = store.get(key, 0);
+    if (G.score > prev) { store.set(key, G.score); rec = G.score > 0 ? "🏆 Новий рекорд!" : ""; }
+    else rec = `Рекорд: ${prev}`;
+  }
+  $("#rRecord").textContent = rec;
+
+  const uniq = [...new Set(G.mistakes)];
+  $("#rMistakes").innerHTML = uniq.length
+    ? `<h2>Помилки (${uniq.length})</h2><ul class="mlist">${uniq.map(code => {
+        const c = BY_CODE[code];
+        return `<li><img src="https://flagcdn.com/w80/${code}.png" alt="" onerror="this.remove()"><span><b>${c.name}</b> — ${c.capital}</span></li>`;
+      }).join("")}</ul>`
+    : "<h2>Без помилок 🎉</h2>";
+  $("#reviewBtn").classList.toggle("hidden", !uniq.length);
+  $("#reviewBtn").onclick = () => startGame({ mode:G.mode, diff:G.diff, type:"free", total:0, codes:uniq, review:true });
+  $("#againBtn").onclick = () => startGame({ mode:G.mode, diff:G.diff, type:G.type, total:G.total, review:false });
+  show("result");
+}
+
+/* =====================================================================
+   7. МЕНЮ ТА ІНТЕРФЕЙС
+   ===================================================================== */
+function show(id) {
+  ["menu", "game", "result"].forEach(s => $("#" + s).classList.toggle("hidden", s !== id));
+  if (id === "menu") renderMenu();
+  window.scrollTo(0, 0);
+}
+
+function updateAtlasNote() {
+  const n = $("#atlasNote");
+  const needs = settings.mode === "contours";
+  if (atlasState === "loading") { n.textContent = "Завантажуємо контури країн…"; n.classList.remove("hidden"); }
+  else if (atlasState === "fail") {
+    n.textContent = needs ? "Не вдалося завантажити контури (потрібен інтернет). Оберіть інший режим."
+                          : "Контури недоступні (немає інтернету) — вони будуть пропущені.";
+    n.classList.remove("hidden");
+  } else n.classList.add("hidden");
+  $("#startBtn").disabled = needs && atlasState !== "ok";
+}
+
+function renderMenu() {
+  const mark = (id, val) => document.querySelectorAll(`#${id} button`).forEach(b => b.classList.toggle("sel", b.dataset.v === String(val)));
+  mark("modeBtns", settings.mode); mark("diffBtns", settings.diff);
+  mark("typeBtns", settings.type); mark("totalBtns", settings.total);
+  $("#timeOpt").classList.toggle("hidden", settings.type !== "time");
+  const b = store.get(`cq_best_${settings.mode}_${settings.diff}`, 0);
+  $("#bestLine").textContent = b ? `🏆 Найкращий результат (${MODE_NAMES[settings.mode]}, ${DIFF[settings.diff].name}): ${b}` : "";
+  updateAtlasNote();
+}
+
+function bind(id, key, num) {
+  document.querySelectorAll(`#${id} button`).forEach(b => b.onclick = () => {
+    settings[key] = num ? +b.dataset.v : b.dataset.v;
+    store.set("cq_settings", settings); renderMenu();
+  });
+}
+bind("modeBtns", "mode"); bind("diffBtns", "diff"); bind("typeBtns", "type"); bind("totalBtns", "total", true);
+
+$("#startBtn").onclick = () => startGame({ ...settings, review:false });
+$("#menuBtn").onclick = () => show("menu");
+
+// Enter = «Далі»
+document.addEventListener("keydown", e => {
+  if (e.key === "Enter" && G && G.state === "feedback" && !$("#game").classList.contains("hidden")) nextQuestion();
+});
+
+// Тема: світла / темна
+function setTheme(t) { document.documentElement.dataset.theme = t; store.set("cq_theme", t); }
+setTheme(store.get("cq_theme", matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
+$("#themeBtn").onclick = () => setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+
+renderMenu();
+loadAtlas();
+</script>
+</body>
+</html>
